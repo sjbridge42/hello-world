@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Backbone JS Example</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+  <!--<link rel="stylesheet" href="">-->
+  <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.2/backbone.js"></script>
+  
+  <style>
+    .container {
+      width:95%;height:200px;margin:0 auto;padding:0;border:1px solid black;
+      min-width:440px;
+    }
+    .draggable {
+      width:50%;height:50%;padding:0;border:1px solid black;
+      text-align:center;vertical-align:middle;font-size:25px;overflow:hidden;
+    }
+    .draggable p {}
+    .left {
+      float:left;
+    }
+    .right {
+      float:right;
+    }
+    .hovered {
+      border:3px dotted green;
+    }
+    
+    .colorChange, .orderedList {
+      width:100%;height:100%;padding:0;border:1px solid black;
+      overflow:hidden;background-color:gray;position:relative;
+    }
+    .orderedList {
+      background-color:white;	    
+    }
+    .bb input {
+      font-size:10px;	 
+      position:absolute;
+      bottom:0px;
+    }
+    .liEdit, .liRemove {
+      font-size:9px;
+      color:blue;
+      text-decoration:underline;
+      cursor:pointer;
+    }
+    
+    #dialog {
+      display:none;	    
+    }
+    
+    .topBar {
+      width:100%;height:12%;padding:0;border-bottom:1px solid gray;
+      background-color:#ccc;position:relative;
+    }
+    .topBar input {
+      font-size:10px;	    
+      /*position:absolute;
+      top:1px;
+      right:20px;*/
+    }
+    .seventy {
+      width:70%;
+      height:100%;
+      border-right:1px solid black;
+      text-align:center;
+    }
+    .thirty {
+      width:30%;
+      height:100%;
+      text-align:center;	    
+    }
+    
+    legend {
+      width:inherit; 
+      padding:0 10px; 
+      border-bottom:none;
+    }
+    
+    fieldset {
+      border: 1px groove #ddd !important;
+      padding: 0 1.4em 1.4em 1.4em !important;
+      margin: 0 1.5em 1.5em 1.5em !important;
+      -webkit-box-shadow:  0px 0px 0px 0px #000;
+      box-shadow:  0px 0px 0px 0px #000;
+    }
+  </style>
+</head>
+
+<body>
+  <fieldset>
+    <legend>jQuery drag and drop</legend>
+      <div class="container">
+	  <div class="draggable left droppable ui-widget-content">
+	    A
+	  </div>
+	  <div class="draggable right droppable ui-widget-content">
+	    B
+	  </div>
+	  <div class="draggable left droppable ui-widget-content">
+	    C
+	  </div>
+	  <div class="draggable right droppable ui-widget-content">
+	    D
+	  </div>
+      </div>
+  </fieldset>
+  <fieldset>
+    <legend>Backbone + jQuery color change</legend>
+    <div class="container">
+      <div class="colorChange">
+        <div class="left bb">
+          <input type="button" value="Change color with Backbone" onclick="colorChanger.promptForColor();" />
+        </div>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Backbone + jQuery list add/remove/edit</legend>
+    <div class="container">
+      <div class="orderedList left bb">
+        <ol class="oneCol"></ol>
+        <div id="dialog" title="Submit a song and artist">
+		<form action="" method="post">
+		<label>Song:</label><br/>
+		<input id="song" name="song" type="text"><br/>
+		<label>Artist:</label><br/>
+		<input id="artist" name="artist" type="text">
+		<!--<input id="submit" type="submit" value="Submit">-->
+		</form>
+	</div>
+	<input id="addSong" type="button" value="Add your favorite songs and artists" />
+
+      </div>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Backbone Model Collection View</legend>
+    <div class="container">
+      <div class="topBar">
+        <div class="right thirty"><input type="button" value="shuffle" /></div>
+        <div class="left seventy">Hover over a collection name to see its models</div>
+      </div>
+      <div class="bottomPane">
+        <div id="ex4items" class="right thirty"></div>
+        <div id="ex4mods" class="left seventy"></div>
+      </div>
+    </div>
+  </fieldset>
+</body>
+<script type="text/javascript">
+  $(document).ready(function() {
+    //example 1
+    $(init);
+    function init() {
+      makeButtons('draggable','Update text','Enter new text:',true,'text');
+      makeButtons('colorChange','Change color with jQuery','Enter a color:',false,'color');
+      //makeButtons('colorChange','Change color with Backbone',null,false,'color');
+    }
+    function makeButtons(sel,butVal,promptText,boolFade,action) {
+      $('.'+sel).each(function(i,obj) {
+        var $d = $('<div/>');
+        var $b = $('<input/>').attr({
+          type: 'button',
+          value: butVal
+        });
+        $d.appendTo(obj);
+        $b.appendTo($d);
+        $d.css({
+          'position':'absolute',
+          'right': '0',
+          'bottom': '0'
+        });
+        if (boolFade) {$d.css('display','none');}
+        $b.css({
+          'font-size':'10px'
+        });
+        if (promptText != null) {
+		$b.on('click',function() {
+		  var $parentEle = $(this).closest('.'+sel);
+		  var $newText = prompt(promptText);
+		  if ($newText === null) return;
+		  if ($newText.length > 0) {
+			switch(action) {
+			  case 'text':
+				$parentEle.html($newText)
+				init()
+				break;
+			  case 'color':
+				$parentEle.css('background-color',$newText)
+				break;
+			}
+		  }
+		});
+        }
+        if (boolFade) {$d.fadeIn(2000);}
+      });
+    }
+    $('.draggable').draggable({
+      containment: '.container',
+      cursor: 'move',
+      stack: '.draggable',
+      revert: true,
+      stop: handleDragStop
+    });
+    function handleDragStop(event,ui) {
+      $(this).addClass('ui-widget-content');
+      $(this).css({'background-color':'white','color':'black'});
+    }
+    $('.droppable').droppable({
+      hoverClass: 'hovered',
+      drop: handleDrop
+    });
+    function handleDrop(event,ui) {
+      var $draggable = ui.draggable;
+      var tempHTML = $draggable.html();
+      $draggable.html($(this).html());
+      $(this).html(tempHTML);
+      $draggable.removeClass('ui-widget-content');
+      $draggable.css({'background-color':'green','color':'white'});
+      init();
+    }
+    
+    //example 2
+    var ColorChanger = Backbone.Model.extend({
+      promptForColor: function() {
+        var newColor = prompt('Enter a color to update the extended Model:');
+        this.set({color: newColor});
+      }
+    });
+    window.colorChanger = new ColorChanger;
+    colorChanger.on('change:color', function(model,color) {
+      $('.colorChange').css('background-color',color)
+    });
+    
+    //example 3
+    var SongAndArtist = Backbone.Model.extend({
+      initialize: function() {
+        playList.add(this);
+        playList.render();
+        }
+    });
+    var PlayList = Backbone.Collection.extend({
+      model: SongAndArtist,
+      render: function() {
+        $('.oneCol').empty();
+        playList.each(function(sa) {
+          var $tempLI = $('<li/>');
+          $tempLI.html('<i>' + sa.get('song') + '</i> by ' + sa.get('artist') +
+            ' <span class="liEdit">edit</span> <span class="liRemove">remove</span>');
+          $('.oneCol').append($tempLI);
+          });
+        }
+    });
+    var playList = new PlayList;
+    $('ol').on('click', 'span.liEdit' , function() {
+      var song = $(this).prevAll('i').html();
+      var found = playList.find(function(s) {
+        return(s.get('song') == song);
+      });
+      $('#dialog').dialog({
+        autoOpen: false,
+        modal: true,
+        title: "Edit this song and artist",
+        buttons: [{
+          text: "Submit",
+          click: function() {
+            var $song = $("#song").val();
+            var $artist = $("#artist").val(); 
+            if ($song.length != 0 && $artist.length != 0) {
+		    $("#song").val('');
+		    $("#artist").val('');
+		    $(this).dialog('close');
+		    found.set({song: $song, artist: $artist});
+		    playList.render();
+		    }
+	    else {$(this).dialog('close');}
+            }
+          }]
+      });
+      $("#song").val(found.get('song'));
+      $("#artist").val(found.get('artist')); 
+      $('#dialog').dialog('open');
+    });
+    $('ol').on('click', 'span.liRemove', function() {
+      var song = $(this).prevAll('i').html();
+      var found = playList.find(function(s) {
+        return(s.get('song') == song);
+      });
+      playList.remove(found);
+      playList.render();
+    });
+    
+    $('#addSong').on('click', function() {
+      $('#dialog').dialog({
+        autoOpen: false,
+        modal: true,
+        buttons: [{
+          text: "Submit",
+          click: function() {
+            var $song = $("#song").val();
+            var $artist = $("#artist").val(); 
+            if ($song.length != 0 && $artist.length != 0) {
+		    $("#song").val('');
+		    $("#artist").val('');
+		    $(this).dialog('close');
+		    var songArtist = new SongAndArtist({song: $song, artist: $artist});
+		    }
+	    else {$(this).dialog('close');}
+            }
+          }]
+      });
+      $('#dialog').dialog('open');
+    });
+    
+    //example 4
+    var BaseModelEx4 = Backbone.Model.extend({
+      defaults: {
+        hLite: false
+      },
+      initialize: function() {
+        coll.add(this);
+        this.bind("change", this.hovered);
+      },
+      hovered: function() {
+        //find the items in the model
+        this.trigger("highlight",[]);
+      }
+    });
+    var Vegetable = BaseModelEx4.extend({
+      defaults: {
+        type: 'Vegetable',
+        hLite: false
+      }
+    });
+    var Animal = BaseModelEx4.extend({
+      defaults: {
+        type: 'Animal',
+        hLite: false
+      }
+    });
+    var Mineral = BaseModelEx4.extend({
+      defaults: {
+        type: 'Mineral',
+        hLite: false
+      }
+    });
+    var BaseCollectionEx4 = Backbone.Collection.extend({
+      model: BaseModelEx4
+    });
+    var CollViewEx4 = Backbone.View.extend({
+      el: '#ex4items',
+      initialize: function() {
+        this.render();
+      },
+      render: function() {
+        this.$el.html('');
+        coll.each(function(vam) {
+          //console.log(vam.get('name') + ' ' + vam.get('type'));
+          var item = new BaseViewEx4({model: vam});
+        
+          this.$el.append(item.render().el);
+        }.bind(this));
+        
+        return this;
+      }
+    });
+    var BaseViewEx4 = Backbone.View.extend({
+      tagName: 'div',
+      className: 'mods',
+      template: _.template($('#vam-template').html()),
+      events: {
+        'mouseenter .mods': 'highlight'
+      },
+      initialize: function() {
+        //this.model.view = this;
+        //_.bind("highlight", this.highlight);
+        this.listenTo(this.model, 'mouseenter', this.render);
+      //  this.render();
+        
+      },
+      highlight: function(model) {
+        //find items displayed in the hovered model and highlight them
+        model.set({hLite:true});
+        alert('here');
+      },
+      render: function() {
+        //console.log(this.template(this.model.attributes));
+        this.$el.html(this.template(this.model.attributes));
+        //this.$el.append('');
+        return this;
+      }
+    });
+    var coll = new BaseCollectionEx4;
+    var beet = new Vegetable({name:'beet'});
+    var onion = new Vegetable({name:'onion'});
+    var celery = new Vegetable({name:'celery'});
+    var radish = new Vegetable({name:'radish'});
+    var lettuce = new Vegetable({name:'lettuce'});
+    var carrot = new Vegetable({name:'carrot'});
+    var bear = new Animal({name:'bear'});
+    var tiger = new Animal({name:'tiger'});
+    var chicken = new Animal({name:'chicken'});
+    var rat = new Animal({name:'rat'});
+    var rabbit = new Animal({name:'rabbit'});
+    var ram = new Animal({name:'ram'});
+    var gold = new Mineral({name:'gold'});
+    var silver = new Mineral({name:'silver'});
+    var tin = new Mineral({name:'tin'});
+    var nickel = new Mineral({name:'nickel'});
+    var salt = new Mineral({name:'salt'});
+    var copper = new Mineral({name:'copper'});
+    //coll.each(function(vam) {
+      //console.log(vam.get('name') + ' ' + vam.get('type'));
+      //console.log(vam.get('type'));  
+    //});
+    var myView = new CollViewEx4;
+  });
+</script>
+<script type="text/template" id="vam-template">
+   <%= name %>: <%= type %> (<%= hLite %>)
+</script>
