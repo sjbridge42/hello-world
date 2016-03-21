@@ -75,6 +75,17 @@
       height:100%;
       text-align:center;	    
     }
+    .vam {
+      width:100%;
+      height:68px;	
+      vertical-align:middle;
+      padding-top:10px;
+      font-size:18px;
+    }
+    
+    .hlight {
+      background-color:yellow;	    
+    }
     
     legend {
       width:inherit; 
@@ -148,7 +159,11 @@
       </div>
       <div class="bottomPane">
         <div id="ex4items" class="right thirty"></div>
-        <div id="ex4mods" class="left seventy"></div>
+        <div id="ex4mods" class="left seventy">
+          <div class="vam">Vegetable</div>
+          <div class="vam">Animal</div>
+          <div class="vam">Mineral</div>
+        </div>
       </div>
     </div>
   </fieldset>
@@ -420,8 +435,27 @@
       //console.log(vam.get('type'));  
     //});
     var myView = new CollViewEx4;
+    
+    $('.vam').on('mouseenter', function() {
+      var classText = $(this).text();
+      //console.log(classText);
+      $('.mods div').each(function(i, v) {
+        //console.log($(this).attr('class'));
+        var classCompare = $(this).attr('class');
+        if (classText == classCompare) {
+          //console.log($(this).text());
+          $(this).addClass('hlight');
+        }
+      });
+    });
+    $('.vam').on('mouseleave', function() {
+      $('.mods div').each(function(i, v) {
+        $(this).removeClass('hlight');
+      });
+    });
+    
   });
 </script>
 <script type="text/template" id="vam-template">
-   <%= name %>: <%= type %> (<%= hLite %>)
+   <div class="<%= type %>"><%= name %>: <%= type %> (<%= hLite %>)</div>
 </script>
