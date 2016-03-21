@@ -77,14 +77,18 @@
     }
     .vam {
       width:100%;
-      height:68px;	
+      height:58px;	
       vertical-align:middle;
-      padding-top:10px;
+      padding-top:16px;
       font-size:18px;
     }
     
     .hlight {
       background-color:yellow;	    
+    }
+    .mods {
+      width:100%;
+      height:25px;
     }
     
     legend {
@@ -154,7 +158,7 @@
     <legend>Backbone Model Collection View</legend>
     <div class="container">
       <div class="topBar">
-        <div class="right thirty"><input type="button" value="shuffle" /></div>
+        <div class="right thirty"><input id="shuffle" type="button" value="shuffle" /></div>
         <div class="left seventy">Hover over a collection name to see its models</div>
       </div>
       <div class="bottomPane">
@@ -375,11 +379,14 @@
       },
       render: function() {
         this.$el.html('');
-        coll.each(function(vam) {
-          //console.log(vam.get('name') + ' ' + vam.get('type'));
-          var item = new BaseViewEx4({model: vam});
-        
-          this.$el.append(item.render().el);
+        coll.reset(coll.shuffle(), {silent:true});
+        coll.each(function(vam, i) {
+          //console.log(i +"("+eval(i > 6)+")" + ":: " + vam.get('name') + ' ' + vam.get('type'));
+          if (i > 6) {
+            return false;
+          }
+          var item = new BaseViewEx4({model: vam});        
+          this.$el.append(item.render().el);          
         }.bind(this));
         
         return this;
@@ -452,6 +459,10 @@
       $('.mods div').each(function(i, v) {
         $(this).removeClass('hlight');
       });
+    });
+    
+    $('#shuffle').on('click', function() {
+      myView.render();
     });
     
   });
